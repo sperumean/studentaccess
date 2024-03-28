@@ -1,18 +1,70 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Student Access Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Plan Management</title>
+    <!-- Add Bootstrap for styling -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <h1>Welcome to the Student Access Management System</h1>
-    <form action="/students" method="post">
-        <input type="text" name="student_id" placeholder="Student ID" required>
-        <input type="text" name="student_name" placeholder="Student Name" required>
-        <input type="submit" value="Add Student">
+
+<div class="container mt-4">
+    <h1>Access Plan Management</h1>
+
+    <!-- Select Access Plan -->
+    <div class="form-group">
+        <label for="accessPlanSelect">Select Access Plan:</label>
+        <select class="form-control" id="accessPlanSelect">
+            <option>Aviation Students</option>
+            <option>Aviation SW</option>
+            <option>Aviation Staff Faculty</option>
+            <option>Aviation SIM Room SW</option>
+        </select>
+    </div>
+
+    <!-- Add Student Form -->
+    <h2>Add Student</h2>
+    <form id="addStudentForm">
+        <div class="form-row">
+            <div class="col">
+                <input type="text" class="form-control" placeholder="Customer Number" required>
+            </div>
+            <div class="col">
+                <input type="text" class="form-control" placeholder="Customer Name" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Add Student</button>
     </form>
-    <hr>
-    <a href="/students">View Students</a>
+
+    <!-- Remove Student Form -->
+    <h2>Remove Student</h2>
+    <form id="removeStudentForm">
+        <div class="form-row">
+            <div class="col">
+                <input type="text" class="form-control" placeholder="Customer Number" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-danger mt-2">Remove Student</button>
+    </form>
+
+    <!-- List of Students -->
+    <h2>Students List</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Customer Number</th>
+                <th>Customer Name</th>
+            </tr>
+        </thead>
+        <tbody id="studentsList">
+            <!-- Dynamic Student Rows Go Here -->
+        </tbody>
+    </table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.7.6/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
