@@ -14,71 +14,69 @@
         .students-table {
             margin-top: 20px;
         }
+        .logout-link {
+            text-align: right;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
-
-<div class="container mt-4">
-    <h1>Access Plan Management</h1>
-
-    <!-- Select Access Plan -->
-    <div class="form-group">
-        <label for="accessPlanSelect">Select Access Plan:</label>
-        <select class="form-control" id="accessPlanSelect">
-            <option>Aviation Students</option>
-            <option>Aviation SW</option>
-            <option>Aviation Staff Faculty</option>
-            <option>Aviation SIM Room SW</option>
-        </select>
+    <div class="container mt-4">
+        <div class="logout-link">
+            <a href="/logout">Logout</a>
+        </div>
+        <h1>Access Plan Management</h1>
+        <!-- Select Access Plan -->
+        <div class="form-group">
+            <label for="accessPlanSelect">Select Access Plan:</label>
+            <select class="form-control" id="accessPlanSelect">
+                <option>Aviation Students</option>
+                <option>Aviation SW</option>
+                <option>Aviation Staff Faculty</option>
+                <option>Aviation SIM Room SW</option>
+            </select>
+        </div>
+        <!-- Form to Process Student Numbers -->
+        <div class="form-group">
+            <label for="studentsTextArea">Paste Student Numbers:</label>
+            <textarea class="form-control" id="studentsTextArea" placeholder="One number per line"></textarea>
+            <button id="processStudentsBtn" class="btn btn-primary mt-2">Process Student Numbers</button>
+        </div>
+        <!-- Table to Display Students -->
+        <table class="table students-table">
+            <thead>
+                <tr>
+                    <th>Student Number</th>
+                    <th>Student Name (auto-filled after processing)</th>
+                    <!-- Include additional columns as needed -->
+                </tr>
+            </thead>
+            <tbody id="studentsList">
+                <!-- Student rows will be added here dynamically -->
+            </tbody>
+        </table>
     </div>
-
-    <!-- Form to Process Student Numbers -->
-    <div class="form-group">
-        <label for="studentsTextArea">Paste Student Numbers:</label>
-        <textarea class="form-control" id="studentsTextArea" placeholder="One number per line"></textarea>
-        <button id="processStudentsBtn" class="btn btn-primary mt-2">Process Student Numbers</button>
-    </div>
-
-    <!-- Table to Display Students -->
-    <table class="table students-table">
-        <thead>
-            <tr>
-                <th>Student Number</th>
-                <th>Student Name (auto-filled after processing)</th>
-                <!-- Include additional columns as needed -->
-            </tr>
-        </thead>
-        <tbody id="studentsList">
-            <!-- Student rows will be added here dynamically -->
-        </tbody>
-    </table>
-</div>
-
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.7.6/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
-<script>
-    // Example JavaScript to handle the student numbers processing
-    document.getElementById('processStudentsBtn').addEventListener('click', function() {
-        var studentNumbers = document.getElementById('studentsTextArea').value.split('\n');
-        var studentsList = document.getElementById('studentsList');
-        studentsList.innerHTML = ''; // Clear current list
-
-        // Iterate over each student number and create table rows
-        studentNumbers.forEach(function(number) {
-            if (number.trim() !== '') {
-                var row = studentsList.insertRow(-1);
-                var cellNumber = row.insertCell(0);
-                var cellName = row.insertCell(1);
-                cellNumber.textContent = number.trim();
-
-                // You would use the actual name fetching logic here
-                cellName.textContent = 'Name for ' + number.trim();
-            }
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.7.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Example JavaScript to handle the student numbers processing
+        document.getElementById('processStudentsBtn').addEventListener('click', function() {
+            var studentNumbers = document.getElementById('studentsTextArea').value.split('\n');
+            var studentsList = document.getElementById('studentsList');
+            studentsList.innerHTML = ''; // Clear current list
+            // Iterate over each student number and create table rows
+            studentNumbers.forEach(function(number) {
+                if (number.trim() !== '') {
+                    var row = studentsList.insertRow(-1);
+                    var cellNumber = row.insertCell(0);
+                    var cellName = row.insertCell(1);
+                    cellNumber.textContent = number.trim();
+                    // You would use the actual name fetching logic here
+                    cellName.textContent = 'Name for ' + number.trim();
+                }
+            });
         });
-    });
-</script>
-
+    </script>
 </body>
 </html>
