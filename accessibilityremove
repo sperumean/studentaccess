@@ -1,0 +1,30 @@
+# Run as administrator
+
+# Disable Ease of Access Center
+Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility\StickyKeys" -Name "Flags" -Value "0"
+Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility" -Name "Sound on Activation" -Value "0"
+Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility" -Name "Warning Sounds" -Value "0"
+
+# Disable the touch keyboard and handwriting panel service
+Stop-Service -Name "TabletInputService" -Force
+Set-Service -Name "TabletInputService" -StartupType Disabled
+
+# Disable accessibility features triggered by tapping
+Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility\SoundSentry" -Name "Flags" -Value "0"
+Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility\TimeOut" -Name "Flags" -Value "0"
+
+# Disable touch feedback
+Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "UserPreferencesMask" -Value ([byte[]](0x90,0x12,0x03,0x80,0x10,0x00,0x00,0x00))
+
+# Specifically target and disable FilterKeys popup
+New-Item -Path "HKCU:\Control Panel\Accessibility\Keyboard Response" -Force
+Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility\Keyboard Response" -Name "Flags" -Value "0"
+
+# Disable ShowSounds
+New-Item -Path "HKCU:\Control Panel\Accessibility\ShowSounds" -Force
+Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility\ShowSounds" -Name "On" -Value "0"
+
+
+# Disable AccessibilityShortcutKeys
+New-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" -Force
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" -Name "ButtonLastDropdownOS" -Value "1"
