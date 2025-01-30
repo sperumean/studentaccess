@@ -1,52 +1,33 @@
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 public class Keyboard {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct INPUT {
-        public int type;
-        public InputUnion U;
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    public struct InputUnion {
-        [FieldOffset(0)] public KEYBDINPUT ki;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct KEYBDINPUT {
-        public short wVk;
-        public short wScan;
-        public int dwFlags;
-        public int time;
-        public IntPtr dwExtraInfo;
-    }
-
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
-
-    public static void SendKey(short key, bool shift = false) {
-        INPUT[] inputs = new INPUT[shift ? 4 : 2];
-
-        if (shift) {
-            inputs[0] = new INPUT { type = 1, U = new InputUnion { ki = new KEYBDINPUT { wVk = 0x10 } } }; // Shift Down
-        }
-        inputs[shift ? 1 : 0] = new INPUT { type = 1, U = new InputUnion { ki = new KEYBDINPUT { wVk = key } } }; // Key Down
-        inputs[shift ? 2 : 1] = new INPUT { type = 1, U = new InputUnion { ki = new KEYBDINPUT { wVk = key, dwFlags = 2 } } }; // Key Up
-        if (shift) {
-            inputs[3] = new INPUT { type = 1, U = new InputUnion { ki = new KEYBDINPUT { wVk = 0x10, dwFlags = 2 } } }; // Shift Up
-        }
-
-        SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
-    }
+    public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, IntPtr dwExtraInfo);
+    
+    [DllImport("user32.dll")]
+    public static extern short GetAsyncKeyState(int vKey);
 }
 "@ -Language CSharp
 
 Write-Host "Press [SPACEBAR] to type `";0600755597?`" globally. Press [ESC] to exit."
 
-# Virtual Key Codes
+# Function to send a single keypress
+function Send-Key($vk, $useShift = $false) {
+    if ($useShift) {
+        [Keyboard]::keybd_event(0x10, 0, 0, [IntPtr]::Zero)  # Press SHIFT
+    }
+
+    [Keyboard]::keybd_event($vk, 0, 0, [IntPtr]::Zero)   # Press key
+    [Keyboard]::keybd_event($vk, 0, 2, [IntPtr]::Zero)   # Release key
+
+    if ($useShift) {
+        [Keyboard]::keybd_event(0x10, 0, 2, [IntPtr]::Zero)  # Release SHIFT
+    }
+}
+
+# Key Mapping (Virtual Key Codes)
 $charMap = @{
     ';' = 0xBA   # Semicolon (;)
     '0' = 0x30   # Number 0
@@ -54,28 +35,24 @@ $charMap = @{
     '7' = 0x37   # Number 7
     '5' = 0x35   # Number 5
     '9' = 0x39   # Number 9
-    '?' = 0xBF   # Question mark (SHIFT + /)
+    '?' = 0xBF   # Slash (Shift + / for '?')
 }
 
-# Function to send keystrokes
-function Send-Keys {
-    param ([string]$text)
-    foreach ($char in $text.ToCharArray()) {
-        $vk = $charMap[$char]
-        $shiftNeeded = ($char -eq '?')  # SHIFT required for `?`
-        [Keyboard]::SendKey($vk, $shiftNeeded)
-        Start-Sleep -Milliseconds 50  # Small delay between keystrokes
-    }
-}
-
-# Key Listening Loop
+# Main loop to detect keypresses
 while ($true) {
-    if ([Keyboard]::SendInput(1, @([Keyboard]::KEYBDINPUT@{wVk=0x20}), 28) -ne 0) {  # SPACEBAR (0x20)
-        Start-Sleep -Milliseconds 50  # Prevent spamming
-        Send-Keys ";0600755597?"
+    if ([Keyboard]::GetAsyncKeyState(0x20) -ne 0) {  # SPACEBAR (0x20)
+        Start-Sleep -Milliseconds 50  # Small delay to prevent spamming
+
+        # Simulate typing ";0600755597?"
+        foreach ($char in ";0600755597?".ToCharArray()) {
+            $vk = $charMap[$char]
+            $shiftNeeded = ($char -eq '?')  # SHIFT required for '?'
+            Send-Key $vk $shiftNeeded
+            Start-Sleep -Milliseconds 50  # Delay between key presses
+        }
     }
 
-    if ([Keyboard]::SendInput(1, @([Keyboard]::KEYBDINPUT@{wVk=0x1B}), 28) -ne 0) {  # ESC (0x1B)
+    if ([Keyboard]::GetAsyncKeyState(0x1B) -ne 0) {  # ESC (0x1B)
         Write-Host "Exiting..."
         break
     }
