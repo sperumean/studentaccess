@@ -12,16 +12,42 @@ public class Keyboard {
 
 Write-Host "Press [SPACEBAR] to type `";0600755597?`" globally. Press [ESC] to exit."
 
+# Function to send keypresses, including SHIFT if needed
+function Send-Key($vk, $useShift = $false) {
+    if ($useShift) {
+        [Keyboard]::keybd_event(0x10, 0, 0, [IntPtr]::Zero)  # Press SHIFT
+    }
+
+    [Keyboard]::keybd_event($vk, 0, 0, [IntPtr]::Zero)   # Press key
+    [Keyboard]::keybd_event($vk, 0, 2, [IntPtr]::Zero)   # Release key
+
+    if ($useShift) {
+        [Keyboard]::keybd_event(0x10, 0, 2, [IntPtr]::Zero)  # Release SHIFT
+    }
+}
+
+# Key Mapping (Virtual Key Codes)
+$charMap = @{
+    ';' = 0xBA   # Semicolon (;)
+    '0' = 0x30   # Number 0
+    '6' = 0x36   # Number 6
+    '7' = 0x37   # Number 7
+    '5' = 0x35   # Number 5
+    '9' = 0x39   # Number 9
+    '?' = 0xBF   # Slash (Shift + / for '?')
+    ':' = 0xBA   # Colon (Shift + ; for ':')
+}
+
+# Main loop to detect keypresses
 while ($true) {
     if ([Keyboard]::GetAsyncKeyState(0x20) -ne 0) {  # SPACEBAR (0x20)
-        Start-Sleep -Milliseconds 50  # Small delay to prevent spam
+        Start-Sleep -Milliseconds 50  # Small delay to prevent spamming
 
-        # Type ";0600755597?" as actual keystrokes
-        $text = ";0600755597?"
-        foreach ($char in $text.ToCharArray()) {
-            $vk = [byte][char]$char
-            [Keyboard]::keybd_event($vk, 0, 0, [IntPtr]::Zero)   # Press key
-            [Keyboard]::keybd_event($vk, 0, 2, [IntPtr]::Zero)   # Release key
+        # Simulate typing ";0600755597?"
+        foreach ($char in ";0600755597?".ToCharArray()) {
+            $vk = $charMap[$char]
+            $shiftNeeded = ($char -eq '?' -or $char -eq ':')  # SHIFT required for `?` and `:`
+            Send-Key $vk $shiftNeeded
             Start-Sleep -Milliseconds 50  # Small delay between key presses
         }
     }
