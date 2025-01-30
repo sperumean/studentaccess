@@ -1,24 +1,35 @@
-Add-Type -AssemblyName System.Windows.Forms
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+using System.Threading;
+public class Keyboard {
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, IntPtr dwExtraInfo);
+    [DllImport("user32.dll")]
+    public static extern short GetAsyncKeyState(int vKey);
+}
+"@ -Language CSharp
 
 Write-Host "Press [SPACEBAR] to type `";0600755597?`" globally. Press [ESC] to exit."
 
-# Create COM Object for Sending Keystrokes
-$wshell = New-Object -ComObject WScript.Shell
-
 while ($true) {
-    # Check if SPACEBAR is pressed
-    if ([System.Windows.Forms.Control]::ModifierKeys -eq "Space") {
-        Start-Sleep -Milliseconds 100  # Prevent spamming
+    if ([Keyboard]::GetAsyncKeyState(0x20) -ne 0) {  # SPACEBAR (0x20)
+        Start-Sleep -Milliseconds 50  # Small delay to prevent spam
 
-        # Simulate typing ";0600755597?"
-        $wshell.SendKeys(";0600755597?")
+        # Type ";0600755597?" as actual keystrokes
+        $text = ";0600755597?"
+        foreach ($char in $text.ToCharArray()) {
+            $vk = [byte][char]$char
+            [Keyboard]::keybd_event($vk, 0, 0, [IntPtr]::Zero)   # Press key
+            [Keyboard]::keybd_event($vk, 0, 2, [IntPtr]::Zero)   # Release key
+            Start-Sleep -Milliseconds 50  # Small delay between key presses
+        }
     }
 
-    # Check if ESC is pressed to exit
-    if ([System.Windows.Forms.Control]::ModifierKeys -eq "Escape") {
+    if ([Keyboard]::GetAsyncKeyState(0x1B) -ne 0) {  # ESC (0x1B)
         Write-Host "Exiting..."
         break
     }
 
-    Start-Sleep -Milliseconds 50  # Small delay to optimize CPU usage
+    Start-Sleep -Milliseconds 50
 }
