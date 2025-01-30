@@ -1,15 +1,30 @@
-$keyPress = $false
+Add-Type -AssemblyName System.Windows.Forms
 
 Write-Host "Press [SPACEBAR] to output ';0600755597?'. Press [ESC] to exit."
 
-# Start listening for keypresses
+# Create an event listener for key presses
+$stop = $false
+$scriptBlock = {
+    while (-not $stop) {
+        if ([System.Windows.Forms.Control]::ModifierKeys -eq "Space") {
+            Write-Host ";0600755597?"
+            Start-Sleep -Milliseconds 200  # Prevents spamming
+        }
+        Start-Sleep -Milliseconds 50
+    }
+}
+
+# Run key listener in a background job
+$job = Start-Job -ScriptBlock $scriptBlock
+
+# Wait for ESC to exit
 while ($true) {
-    $key = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown").VirtualKeyCode
-    
-    if ($key -eq 32) {  # 32 is the Virtual Key Code for SPACEBAR
-        Write-Host ";0600755597?"
-    } elseif ($key -eq 27) {  # 27 is the Virtual Key Code for ESC (to exit)
+    if ([System.Windows.Forms.Control]::ModifierKeys -eq "Escape") {
         Write-Host "Exiting..."
+        $stop = $true
+        Stop-Job $job
+        Remove-Job $job
         break
     }
+    Start-Sleep -Milliseconds 100
 }
