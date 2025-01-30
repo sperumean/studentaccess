@@ -12,37 +12,42 @@ public class Keyboard {
 
 Write-Host "Press [SPACEBAR] to type `";0600755597?`" globally. Press [ESC] to exit."
 
-# Map characters to correct virtual keycodes
+# Virtual Key Codes for Each Character
 $charMap = @{
-    ';' = 0xBA  # Virtual key for semicolon (;)
-    '0' = 0x30  # Number 0
-    '6' = 0x36  # Number 6
-    '7' = 0x37  # Number 7
-    '5' = 0x35  # Number 5
-    '9' = 0x39  # Number 9
-    '?' = 0xBF  # Virtual key for slash (/) requires SHIFT
+    ';' = 0xBA   # Semicolon (;)
+    '0' = 0x30   # Number 0
+    '6' = 0x36   # Number 6
+    '7' = 0x37   # Number 7
+    '5' = 0x35   # Number 5
+    '9' = 0x39   # Number 9
+    '?' = 0xBF   # Question mark (Shift + /)
 }
 
+# Function to Simulate Key Press
+function Press-Key($vk, $useShift = $false) {
+    if ($useShift) {
+        [Keyboard]::keybd_event(0x10, 0, 0, [IntPtr]::Zero)  # Press SHIFT
+    }
+
+    [Keyboard]::keybd_event($vk, 0, 0, [IntPtr]::Zero)   # Press Key
+    [Keyboard]::keybd_event($vk, 0, 2, [IntPtr]::Zero)   # Release Key
+
+    if ($useShift) {
+        [Keyboard]::keybd_event(0x10, 0, 2, [IntPtr]::Zero)  # Release SHIFT
+    }
+}
+
+# Key Listening Loop
 while ($true) {
     if ([Keyboard]::GetAsyncKeyState(0x20) -ne 0) {  # SPACEBAR (0x20)
-        Start-Sleep -Milliseconds 50  # Small delay to prevent spam
+        Start-Sleep -Milliseconds 50  # Prevent spamming
 
-        # Type ";0600755597?" correctly
+        # Simulate typing ";0600755597?"
         foreach ($char in ";0600755597?".ToCharArray()) {
             $vk = $charMap[$char]
-
-            if ($char -eq '?') {
-                [Keyboard]::keybd_event(0x10, 0, 0, [IntPtr]::Zero)  # Press SHIFT
-            }
-
-            [Keyboard]::keybd_event($vk, 0, 0, [IntPtr]::Zero)   # Press key
-            [Keyboard]::keybd_event($vk, 0, 2, [IntPtr]::Zero)   # Release key
-
-            if ($char -eq '?') {
-                [Keyboard]::keybd_event(0x10, 0, 2, [IntPtr]::Zero)  # Release SHIFT
-            }
-
-            Start-Sleep -Milliseconds 50  # Small delay between key presses
+            $shiftNeeded = ($char -eq '?')  # Shift is needed for '?'
+            Press-Key $vk $shiftNeeded
+            Start-Sleep -Milliseconds 50  # Small delay between keystrokes
         }
     }
 
