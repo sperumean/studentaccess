@@ -2,9 +2,42 @@ Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+
 public class Keyboard {
+    [StructLayout(LayoutKind.Sequential)]
+    public struct INPUT {
+        public int type;
+        public InputUnion U;
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    public struct InputUnion {
+        [FieldOffset(0)] public MOUSEINPUT mi;
+        [FieldOffset(0)] public KEYBDINPUT ki;
+        [FieldOffset(0)] public HARDWAREINPUT hi;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MOUSEINPUT {
+        public int dx, dy, mouseData, dwFlags, time;
+        public IntPtr dwExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct KEYBDINPUT {
+        public short wVk, wScan;
+        public int dwFlags, time;
+        public IntPtr dwExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct HARDWAREINPUT {
+        public int uMsg, wParamL, wParamH;
+    }
+
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, IntPtr dwExtraInfo);
+    public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
     [DllImport("user32.dll")]
     public static extern short GetAsyncKeyState(int vKey);
 }
@@ -12,42 +45,61 @@ public class Keyboard {
 
 Write-Host "Press [SPACEBAR] to type `";0600755597?`" globally. Press [ESC] to exit."
 
-# Virtual Key Codes for Each Character
+# Function to send keystrokes
+function Send-Key($vk, $useShift = $false) {
+    $inputs = @()
+    
+    if ($useShift) {
+        $shiftPress = New-Object Keyboard+INPUT
+        $shiftPress.type = 1
+        $shiftPress.U.ki.wVk = 0x10  # SHIFT key
+        $inputs += $shiftPress
+    }
+
+    $keyPress = New-Object Keyboard+INPUT
+    $keyPress.type = 1
+    $keyPress.U.ki.wVk = $vk
+    $inputs += $keyPress
+
+    $keyRelease = New-Object Keyboard+INPUT
+    $keyRelease.type = 1
+    $keyRelease.U.ki.wVk = $vk
+    $keyRelease.U.ki.dwFlags = 2  # Key up
+    $inputs += $keyRelease
+
+    if ($useShift) {
+        $shiftRelease = New-Object Keyboard+INPUT
+        $shiftRelease.type = 1
+        $shiftRelease.U.ki.wVk = 0x10  # SHIFT key up
+        $shiftRelease.U.ki.dwFlags = 2
+        $inputs += $shiftRelease
+    }
+
+    [Keyboard]::SendInput($inputs.Length, $inputs, [System.Runtime.InteropServices.Marshal]::SizeOf($inputs[0]))
+}
+
+# Key Mapping
 $charMap = @{
-    ';' = 0xBA   # Semicolon (;)
-    '0' = 0x30   # Number 0
-    '6' = 0x36   # Number 6
-    '7' = 0x37   # Number 7
-    '5' = 0x35   # Number 5
-    '9' = 0x39   # Number 9
-    '?' = 0xBF   # Question mark (Shift + /)
+    ';' = 0xBA  # Semicolon (;)
+    '0' = 0x30  # 0
+    '6' = 0x36  # 6
+    '7' = 0x37  # 7
+    '5' = 0x35  # 5
+    '9' = 0x39  # 9
+    '?' = 0xBF  # Question mark (Shift + /)
 }
 
-# Function to Simulate Key Press
-function Press-Key($vk, $useShift = $false) {
-    if ($useShift) {
-        [Keyboard]::keybd_event(0x10, 0, 0, [IntPtr]::Zero)  # Press SHIFT
-    }
-
-    [Keyboard]::keybd_event($vk, 0, 0, [IntPtr]::Zero)   # Press Key
-    [Keyboard]::keybd_event($vk, 0, 2, [IntPtr]::Zero)   # Release Key
-
-    if ($useShift) {
-        [Keyboard]::keybd_event(0x10, 0, 2, [IntPtr]::Zero)  # Release SHIFT
-    }
-}
-
-# Key Listening Loop
+# Loop to detect spacebar press
 while ($true) {
     if ([Keyboard]::GetAsyncKeyState(0x20) -ne 0) {  # SPACEBAR (0x20)
         Start-Sleep -Milliseconds 50  # Prevent spamming
 
-        # Simulate typing ";0600755597?"
+        # Send keystrokes
         foreach ($char in ";0600755597?".ToCharArray()) {
             $vk = $charMap[$char]
-            $shiftNeeded = ($char -eq '?')  # Shift is needed for '?'
-            Press-Key $vk $shiftNeeded
-            Start-Sleep -Milliseconds 50  # Small delay between keystrokes
+            $shiftNeeded = ($char -eq '?')  # SHIFT required for '?'
+            Send-Key $vk $shiftNeeded
+            Start-Sleep -Milliseconds 50  # Delay between key presses
         }
     }
 
@@ -58,3 +110,4 @@ while ($true) {
 
     Start-Sleep -Milliseconds 50
 }
+
