@@ -1,22 +1,35 @@
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 public class Keyboard {
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, IntPtr dwExtraInfo);
     [DllImport("user32.dll")]
     public static extern short GetAsyncKeyState(int vKey);
 }
 "@ -Language CSharp
 
-Write-Host "Press SPACEBAR to output ';0600755597?'. Press ESC to exit."
+Write-Host "Press [SPACEBAR] to type `";0600755597?`" globally. Press [ESC] to exit."
 
 while ($true) {
     if ([Keyboard]::GetAsyncKeyState(0x20) -ne 0) {  # SPACEBAR (0x20)
-        Write-Host ";0600755597?"
-        Start-Sleep -Milliseconds 200
+        Start-Sleep -Milliseconds 50  # Small delay to prevent spam
+
+        # Type ";0600755597?" as actual keystrokes
+        $text = ";0600755597?"
+        foreach ($char in $text.ToCharArray()) {
+            $vk = [byte][char]$char
+            [Keyboard]::keybd_event($vk, 0, 0, [IntPtr]::Zero)   # Press key
+            [Keyboard]::keybd_event($vk, 0, 2, [IntPtr]::Zero)   # Release key
+            Start-Sleep -Milliseconds 50  # Small delay between key presses
+        }
     }
+
     if ([Keyboard]::GetAsyncKeyState(0x1B) -ne 0) {  # ESC (0x1B)
         Write-Host "Exiting..."
         break
     }
+
     Start-Sleep -Milliseconds 50
 }
