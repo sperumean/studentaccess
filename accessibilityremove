@@ -1,20 +1,15 @@
-# Run as administrator
+$keyPress = $false
 
-# Completely disable Narrator and its activation methods
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\Narrator.exe" -Name "Debugger" -Value "%1" -Type String -Force
+Write-Host "Press [SPACEBAR] to output ';0600755597?'. Press [ESC] to exit."
 
-# Disable Narrator's ability to start from touch
-Set-ItemProperty -Path "HKCU:\Software\Microsoft\Narrator\NoRoam" -Name "TouchEnabled" -Value 0 -Type DWord -Force
-
-# Disable all Narrator shortcuts
-Set-ItemProperty -Path "HKCU:\Software\Microsoft\Narrator\NoRoam" -Name "ShortcutEnabled" -Value 0 -Type DWord -Force
-
-# Disable tap gesture activation
-Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad" -Name "GesturesDisabled" -Value 1 -Type DWord -Force
-
-# Disable touch feedback completely
-Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "UserPreferencesMask" -Value ([byte[]](0x90,0x12,0x03,0x80,0x10,0x00,0x00,0x00))
-
-# Restart Windows Explorer to apply changes
-Stop-Process -Name "explorer" -Force
-Start-Process "explorer"
+# Start listening for keypresses
+while ($true) {
+    $key = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown").VirtualKeyCode
+    
+    if ($key -eq 32) {  # 32 is the Virtual Key Code for SPACEBAR
+        Write-Host ";0600755597?"
+    } elseif ($key -eq 27) {  # 27 is the Virtual Key Code for ESC (to exit)
+        Write-Host "Exiting..."
+        break
+    }
+}
